@@ -11,15 +11,17 @@ struct order
 {
 	char customer[50];
 	char date[50];
+	char time[50];
 	int numOfItem;
 	struct items itm[50];
 };
-void generateBillHeader(char name[50], char date[30])
+void generateBillHeader(char name[50], char date[30], char time[50])
 {
 	printf("\n\n");
 	printf("\t    BCH. Restaurant");
 	printf("\n\t   -----------------");
 	printf("\nDate: %s", date);
+	printf("\nTime: %s", time);
 	printf("\nInvoice To: %s", name);
 	printf("\n");
 	printf("---------------------------------------\n");
@@ -55,11 +57,11 @@ int main()
 {
 	char savebill = 'y', name[50], flag = 'y';
 	float total;
-	int opt, n, valid = 0;
+	int opt, n, valid = 0, w;
 	FILE *fp;
 	struct order ord;
 
-	while (flag == 'y')
+	while (flag == 'y' || flag == 'Y')
 	{
 		printf("\t\t==============BCH. RESTAURANT==============");
 		printf("\n\n1-Generate Invoice");
@@ -78,6 +80,7 @@ int main()
 			fgets(ord.customer, 50, stdin);
 			ord.customer[strlen(ord.customer) - 1] = 0;
 			strcpy(ord.date, __DATE__);
+			strcpy(ord.time, __TIME__);
 			printf("\nPlease the number of item: ");
 			scanf("%d", &n);
 			ord.numOfItem = n;
@@ -94,7 +97,7 @@ int main()
 				scanf("%f", &ord.itm[i].price);
 				total += ord.itm[i].price * ord.itm[i].qty;
 			}
-			generateBillHeader(ord.customer, ord.date);
+			generateBillHeader(ord.customer, ord.date, ord.time);
 			for (int i = 0; i < ord.numOfItem; i++)
 			{
 				generateBillBody(ord.itm[i].item, ord.itm[i].qty, ord.itm[i].price);
@@ -105,8 +108,13 @@ int main()
 			if (savebill == 'y')
 			{
 				fp = fopen("RestaurantBill.txt", "a+");
-				fwrite(&ord, sizeof(struct order), 1, fp);
-				if (fwrite != 0)
+				if (fp == NULL)
+				{
+					printf("Error: u have no information\n");
+					break;
+				}
+				w = fwrite(&ord, sizeof(struct order), 1, fp);
+				if (w != 0)
 					printf("\nSuccessfully saved");
 				else
 					printf("\nError saving");
@@ -116,11 +124,16 @@ int main()
 		case 2:
 			system("clear");
 			fp = fopen("RestaurantBill.txt", "r");
+			if (fp == NULL)
+			{
+				printf("Error: u have no information\n");
+				break;
+			}
 			printf("\n==============Your Prv Order==============");
 			while (fread(&ord, sizeof(struct order), 1, fp))
 			{
 				float T = 0;
-				generateBillHeader(ord.customer, ord.date);
+				generateBillHeader(ord.customer, ord.date, ord.time);
 				for (int i = 0; i < ord.numOfItem; i++)
 				{
 					generateBillBody(ord.itm[i].item, ord.itm[i].qty, ord.itm[i].price);
@@ -131,18 +144,24 @@ int main()
 			fclose(fp);
 			break;
 		case 3:
+			system("clear");
 			printf("\nEnter the name you looking for : ");
 			fgets(name, 50, stdin);
 			name[strlen(name) - 1] = 0;
 			system("clear");
 			fp = fopen("RestaurantBill.txt", "r");
+			if (fp == NULL)
+			{
+				printf("Error: u have no information\n");
+				break;
+			}
 			while (fread(&ord, sizeof(struct order), 1, fp))
 			{
 				float T = 0;
 				if (!strcmp(ord.customer, name))
 				{
 					printf("\n============== %s's Order ==============", name);
-					generateBillHeader(ord.customer, ord.date);
+					generateBillHeader(ord.customer, ord.date, ord.time);
 					for (int i = 0; i < ord.numOfItem; i++)
 					{
 						generateBillBody(ord.itm[i].item, ord.itm[i].qty, ord.itm[i].price);
@@ -165,7 +184,7 @@ int main()
 			printf("Invalide option: %d", opt);
 			break;
 		}
-		printf("\nDo you want to add an other item [Y/N]: ");
+		printf("\nDo you want to add an other option [Y/N]: ");
 		scanf("%s", &flag);
 	}
 	printf("Exiting...");
